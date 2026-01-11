@@ -292,7 +292,8 @@ genBtn.addEventListener("click", async () => {
   // clear any previous status message (errorDiv used instead of replacing container)
   errorDiv.textContent = "";
 
-  await generateGraphic(entries);
+  const addBorder = !!document.getElementById("add-border-chk")?.checked;
+  await generateGraphic(entries, { graphicArea, addBorder });
 });
 
 // wire up the test button to use dummy data for quick testing
@@ -308,5 +309,7 @@ testBtn.addEventListener("click", async () => {
     { place: "8", name: "Axe", character: "Pikachu", icon: null },
   ];
 
-  await generateGraphic(dummy);
+  // compute addBorder (same as you do for the real generate)
+  const addBorder = !!document.getElementById("add-border-chk")?.checked;
+  await generateGraphic(dummy, { graphicArea, addBorder });
 });

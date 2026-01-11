@@ -1,7 +1,13 @@
+import { loadCharacterIcon } from "./icon.js";
+
 // Generate graphic from the editable rows
 // refactor: single function that draws given entries (preloads icons)
-export async function generateGraphic(entries) {
+export async function generateGraphic(entries, { graphicArea, addBorder = false } = {}) {
+  if (!graphicArea) throw new Error("generateGraphic requires a graphicArea element");
   graphicArea.innerHTML = "";
+
+  // use addBorder instead of querying the DOM in this module
+  const borderSize = addBorder ? 1 : 0;
 
   // ensure entries is an array
   if (!Array.isArray(entries) || !entries.length) {
@@ -25,10 +31,6 @@ export async function generateGraphic(entries) {
   const textFont = "700 44px Roboto, serif"; // name & placement font (44px)
   const headerFont = "700 72px Roboto, serif"; // "Top 8" font (72px)
   const headerBottomPadding = 24;
-
-  // border option (reads the checkbox added to the UI)
-  const addBorder = !!document.getElementById("add-border-chk")?.checked;
-  const borderSize = addBorder ? 1 : 0; // border thickness in CSS pixels
 
   // measurement context (unscaled)
   const measureCtx = document.createElement("canvas").getContext("2d");
