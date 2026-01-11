@@ -1,4 +1,4 @@
-// new helpers: map character -> asset filename and preload icon
+// helper to map character -> asset filename and preload icon
 export function cleanedIconBase(name) {
   if (!name) return null;
   // remove periods and spaces, keep ampersands and letters intact to match filenames like "MrGame&WatchHeadSSBM.png"
