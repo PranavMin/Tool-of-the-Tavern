@@ -9,7 +9,8 @@
     "package": "electron-forge package",
     "make": "electron-forge make",
     "publish": "electron-forge publish",
-    "lint": "echo \"No linting configured\""
+    "lint": "echo \"No linting configured\"",
+    "dist": "electron-builder"
   },
   "keywords": [],
   "author": {
@@ -17,6 +18,18 @@
     "email": "pranavmin@gmail.com"
   },
   "license": "MIT",
+  "build": {
+    "appId": "com.kegstand.tott-top8-gen",
+    "productName": "tott-top8-gen",
+    "win": {
+      "target": "portable"
+    },
+    "files": [
+      "package.json",
+      ".vite/**/*",
+      ".env"
+    ]
+  },
   "devDependencies": {
     "@electron-forge/cli": "^7.8.3",
     "@electron-forge/maker-deb": "^7.10.2",
@@ -28,6 +41,7 @@
     "@electron-forge/plugin-vite": "^7.10.2",
     "@electron/fuses": "^1.8.0",
     "electron": "39.2.7",
+    "electron-builder": "^24.13.3",
     "vite": "^7.3.1"
   },
   "dependencies": {
