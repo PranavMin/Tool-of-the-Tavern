@@ -22,7 +22,9 @@
     "appId": "com.kegstand.tott-top8-gen",
     "productName": "tott-top8-gen",
     "win": {
-      "target": "portable"
+      "target": "portable",
+      "icon": "build/icon.ico",
+      "signAndEditExecutable": true
     },
     "files": [
       "package.json",
