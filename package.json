@@ -2,7 +2,7 @@
   "name": "tott-top8-gen",
   "productName": "tott-top8-gen",
   "version": "1.0.0",
-  "description": "My Electron application description",
+  "description": "Talk of the Tavern Top 8 Generator",
   "main": ".vite/build/main.js",
   "scripts": {
     "start": "electron-forge start",
