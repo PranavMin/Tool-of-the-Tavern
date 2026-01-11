@@ -384,40 +384,7 @@ async function generateGraphic(entries) {
     }
     const iconY = y + (rowH - iconSize) / 2;
 
-    if (e.icon) {
-      // draw image as-is (no circular clipping)
-      try {
-        ctx.drawImage(e.icon, iconX, iconY, iconSize, iconSize);
-      } catch (err) {
-        // fallback to square with initials if drawImage fails
-        ctx.fillStyle = "#cccccc";
-        ctx.fillRect(iconX, iconY, iconSize, iconSize);
-        ctx.fillStyle = "#fff";
-        ctx.font = "bold 14px sans-serif";
-        ctx.textAlign = "center";
-        ctx.fillText(
-          charInitials(e.character || e.name),
-          iconX + iconSize / 2,
-          iconY + iconSize / 2
-        );
-      }
-    } else {
-      // fallback: simple colored square with initials (no character text)
-      const seed = (e.character || e.name || "")
-        .split("")
-        .reduce((acc, ch) => acc + ch.charCodeAt(0), 0);
-      const hue = seed % 360;
-      ctx.fillStyle = `hsl(${hue} 60% 45%)`;
-      ctx.fillRect(iconX, iconY, iconSize, iconSize);
-      ctx.fillStyle = "#fff";
-      ctx.font = "bold 14px sans-serif";
-      ctx.textAlign = "center";
-      ctx.fillText(
-        charInitials(e.character || e.name),
-        iconX + iconSize / 2,
-        iconY + iconSize / 2
-      );
-    }
+    ctx.drawImage(e.icon, iconX, iconY, iconSize, iconSize);
   });
 
   // draw border if requested (stroke centered on the canvas edge)
@@ -458,12 +425,75 @@ genBtn.addEventListener("click", async () => {
     return;
   }
 
+  // ensure there's a persistent error element (inserted above the container)
+  let errorDiv = document.getElementById("top8-error");
+  if (!errorDiv) {
+    errorDiv = document.createElement("div");
+    errorDiv.id = "top8-error";
+    errorDiv.style.color = "#b91c1c"; // red-700
+    errorDiv.style.margin = "8px 0";
+    errorDiv.style.fontWeight = "600";
+    // insert above the container so we don't remove the rows when showing messages
+    container.parentNode.insertBefore(errorDiv, container);
+  }
+  // clear previous error text
+  errorDiv.textContent = "";
+
+  // clear previous visual warnings on selects/inputs
+  rows.forEach((r) => {
+    const sel = r.querySelector("select");
+    const inp = r.querySelector("input");
+    if (sel) {
+      sel.style.border = "";
+      sel.style.boxShadow = "";
+      sel.style.background = "";
+    }
+    if (inp) {
+      inp.style.border = "";
+      inp.style.boxShadow = "";
+    }
+    r.classList.remove("missing-character");
+  });
+
+  // find first row with missing character selection
+  const missingIndex = rows.findIndex((r) => {
+    return !((r.querySelector("select")?.value || "").trim());
+  });
+
+  if (missingIndex !== -1) {
+    const missingRow = rows[missingIndex];
+    const sel = missingRow.querySelector("select");
+    const inp = missingRow.querySelector("input");
+    if (sel) {
+      // visually indicate the missing selection and focus it
+      sel.style.border = "2px solid #e11";
+      sel.style.boxShadow = "0 0 0 3px rgba(225,29,72,0.12)";
+      sel.focus();
+    }
+    if (inp) {
+      // also subtly highlight the name input so the whole row is obvious
+      inp.style.border = "2px solid #e11";
+      inp.style.boxShadow = "0 0 0 3px rgba(225,29,72,0.06)";
+    }
+
+    missingRow.classList.add("missing-character");
+
+    errorDiv.textContent =
+      "Please select a character for every player before generating the graphic.";
+    // bring the missing row into view
+    missingRow.scrollIntoView({ behavior: "smooth", block: "center" });
+    return;
+  }
+
   const entries = rows.map((r) => {
     const place = r.children[0]?.textContent?.replace(".", "")?.trim() || "";
     const name = (r.querySelector("input")?.value || "").trim() || "Unknown";
     const character = (r.querySelector("select")?.value || "").trim();
     return { place, name, character, icon: null };
   });
+
+  // clear any previous status message (errorDiv used instead of replacing container)
+  errorDiv.textContent = "";
 
   await generateGraphic(entries);
 });
