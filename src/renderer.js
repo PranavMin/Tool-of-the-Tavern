@@ -82,7 +82,7 @@ const input = document.createElement('input');
 input.id = 'startgg-input';
 input.placeholder = 'Paste start.gg event URL or tournament/.../event/...';
 input.style.width = '100%';
-input.style.maxWidth = '1008px'; // 40% larger than previous 720px
+input.style.maxWidth = '700px'; // 40% larger than previous 720px
 input.style.marginBottom = '8px';
 input.value = STARTGG_URL; // prefill with example
 document.body.appendChild(input);
@@ -92,16 +92,17 @@ const btn = document.createElement('button');
 btn.id = 'fetch-top8-btn';
 btn.textContent = 'Fetch Top 8';
 btn.style.display = 'block';
-btn.style.marginTop = '8px';
+btn.style.marginTop = '8px auto';
+btn.style.margin = '0 auto 8px auto';
 btn.style.width = '100%';
-btn.style.maxWidth = '1008px'; // match input width (40% larger)
+btn.style.maxWidth = '600px'; // match input width (40% larger)
 document.body.appendChild(btn);
 
 // warning / status area (reused for results)
 const container = document.createElement('div');
 container.id = 'top8-container';
 container.style.whiteSpace = 'pre-wrap'; // keep newlines
-container.style.marginTop = '8px';
+container.style.marginTop = '8px auto';
 document.body.appendChild(container);
 
 // new button to generate graphic from the editable form
@@ -109,17 +110,42 @@ const genBtn = document.createElement('button');
 genBtn.id = 'generate-graphic-btn';
 genBtn.textContent = 'Generate Graphic';
 genBtn.style.display = 'block';
-genBtn.style.marginTop = '8px';
+// center the button, limit max width so margin auto centers it
+genBtn.style.maxWidth = '600px';
 genBtn.style.width = '100%';
-genBtn.style.maxWidth = '1008px';
+genBtn.style.margin = '8px auto';
 genBtn.disabled = true; // enabled after successful fetch/render
 document.body.appendChild(genBtn);
 
 // area where generated canvas / download link will be placed
 const graphicArea = document.createElement('div');
 graphicArea.id = 'graphic-area';
+// center canvas and buttons inside this area
+graphicArea.style.display = 'flex';
+graphicArea.style.flexDirection = 'column';
+graphicArea.style.alignItems = 'center';
 graphicArea.style.marginTop = '12px';
 document.body.appendChild(graphicArea);
+
+// add a checkbox to toggle a border around the generated image
+const borderLabel = document.createElement('label');
+borderLabel.style.display = 'inline-block';
+borderLabel.style.marginTop = '8px';
+borderLabel.style.marginBottom = '8px';
+borderLabel.style.maxWidth = '1008px';
+borderLabel.style.width = '100%';
+
+const borderChk = document.createElement('input');
+borderChk.type = 'checkbox';
+borderChk.id = 'add-border-chk';
+borderChk.style.marginRight = '8px';
+
+borderLabel.appendChild(borderChk);
+borderLabel.appendChild(document.createTextNode('Add border'));
+
+// place the checkbox underneath the generate button but above the canvas
+// insert before the graphic area so it shows above whatever canvas will be appended there
+document.body.insertBefore(borderLabel, graphicArea);
 
 // add a test button to generate graphic from dummy data
 const testBtn = document.createElement('button');
@@ -181,12 +207,14 @@ btn.addEventListener('click', async () => {
                 row.style.display = 'flex';
                 row.style.alignItems = 'center';
                 row.style.gap = '8px';
-                row.style.marginBottom = '6px';
+                row.style.marginBottom = '0px';
+                row.style.marginTop = '4px';
 
                 const placelabel = document.createElement('div');
                 placelabel.textContent = `${placement}.`;
-                placelabel.style.width = '20px';
-                placelabel.style.flex = '0 0 auto';
+                placelabel.style.width = 'auto';
+                placelabel.style.height = 'auto';
+                // placelabel.style.flex = '0 0 auto';
 
                 const nameInput = document.createElement('input');
                 nameInput.type = 'text';
@@ -211,7 +239,7 @@ btn.addEventListener('click', async () => {
                     charSelect.appendChild(opt);
                 });
 
-                charSelect.style.flex = '0 0 300px';
+                charSelect.style.flex = '1';
 
                 row.appendChild(placelabel);
                 row.appendChild(nameInput);
@@ -279,57 +307,124 @@ async function generateGraphic(entries) {
         e.icon = await loadCharacterIcon(e.character);
     }));
 
-    // canvas sizing
-    const width = 400;
-    const rowH = 60;
-    const height = entries.length * rowH;
+    // layout constants
+    const leftPadding = 4;
+    const rightPadding = 4;
+    const iconLeftPadding = 24;
+    const iconSize = 60;
+    const rowH = 70;
+    const textFont = '700 44px Roboto, serif';   // name & placement font (44px)
+    const headerFont = '700 72px Roboto, serif'; // "Top 8" font (72px)
+    const headerBottomPadding = 24;
+
+    // border option (reads the checkbox added to the UI)
+    const addBorder = !!document.getElementById('add-border-chk')?.checked;
+    const borderSize = addBorder ? 1 : 0; // border thickness in CSS pixels
+
+    // measurement context (unscaled)
+    const measureCtx = document.createElement('canvas').getContext('2d');
+    measureCtx.font = textFont;
+
+    // measure widest placement+name
+    let maxRowTextWidth = 0;
+    entries.forEach(e => {
+        const label = `${e.place}. ${e.name}`;
+        const w = measureCtx.measureText(label).width;
+        if (w > maxRowTextWidth) maxRowTextWidth = w;
+    });
+
+    // measure header
+    measureCtx.font = headerFont;
+    const headerText = 'Top 8';
+    const headerWidth = measureCtx.measureText(headerText).width;
+    const headerHeight = 72; // approximate; matches font size
+
+    // compute inner content width (without border) and final needed width including border
+    const neededWidthForRows = leftPadding + maxRowTextWidth + iconLeftPadding + iconSize + rightPadding;
+    const innerWidth = Math.ceil(Math.max(neededWidthForRows, leftPadding + headerWidth + rightPadding, 200)); // min width 200
+    const neededWidth = innerWidth + borderSize * 2;
+
+    // compute inner content height and final height including border
+    const innerHeight = headerHeight + headerBottomPadding + (entries.length * rowH);
+    const height = innerHeight + borderSize * 2;
+
+    // device pixel ratio handling
     const dpr = window.devicePixelRatio || 1;
     const canvas = document.createElement('canvas');
-    canvas.width = width * dpr;
+    canvas.width = neededWidth * dpr;
     canvas.height = height * dpr;
-    canvas.style.width = width + 'px';
+    canvas.style.width = neededWidth + 'px';
     canvas.style.height = height + 'px';
     const ctx = canvas.getContext('2d');
     ctx.scale(dpr, dpr);
 
-    // transparent background (don't paint a solid background so PNG keeps alpha)
+    // transparent background
     canvas.style.background = 'transparent';
-    ctx.clearRect(0, 0, width, height);
+    ctx.clearRect(0, 0, neededWidth, height);
 
-    // draw rows
+    // draw header (offset by borderSize)
+    ctx.fillStyle = '#523d30';
+    ctx.font = headerFont;
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'middle';
+    const headerY = borderSize + headerHeight / 2;
+    ctx.fillText(headerText, borderSize + (innerWidth - headerWidth) / 2, headerY);
+
+    // draw rows (offset by borderSize)
+    ctx.font = textFont;
+    ctx.textBaseline = 'middle';
     entries.forEach((e, i) => {
-        const y = i * rowH;
-        // stripe
-        // ctx.fillStyle = i % 2 === 0 ? 'rgba(255,255,255,0.02)' : 'rgba(255,255,255,0.04)';
-        // ctx.fillRect(0, y, width, rowH);
+        const y = borderSize + headerHeight + headerBottomPadding + i * rowH;
+        const label = `${e.place}. ${e.name}`;
 
-        const nameX = 40;
-        const nameY = y + rowH / 2; 
-        
-        // placement
+        // text
         ctx.fillStyle = '#523d30';
-        ctx.font = '800 40px Roboto, serif';
         ctx.textAlign = 'left';
-        ctx.fillText(e.place + '. ' + e.name, 20, y + rowH / 2);
+        ctx.fillText(label, borderSize + leftPadding, y + rowH / 2);
 
-
-
-
-        // character icon / initials: render as a standalone square to the right of the name
-        const iconSize = 35;
-        // measure text to place icon right after name
-        const textWidth = ctx.measureText(e.name).width;
-
-        const iconLeftPadding = 30;
-        let iconX = Math.round(nameX + textWidth + iconLeftPadding);
-        // ensure icon doesn't overflow canvas
-        if (iconX + iconSize > width - iconLeftPadding) {
-            iconX = width - iconLeftPadding - iconSize;
+        // measure to place icon immediately after text
+        const textWidth = ctx.measureText(label).width;
+        let iconX = Math.round(borderSize + leftPadding + textWidth + iconLeftPadding);
+        // ensure icon doesn't overflow inner content area
+        const innerRight = borderSize + innerWidth - rightPadding;
+        if (iconX + iconSize > innerRight) {
+            iconX = innerRight - iconSize;
         }
-        const iconY = y + (rowH - iconSize) / 2 - 10;
-        ctx.drawImage(e.icon, iconX, iconY, iconSize, iconSize);
+        const iconY = y + (rowH - iconSize) / 2;
 
+        if (e.icon) {
+            // draw image as-is (no circular clipping)
+            try {
+                ctx.drawImage(e.icon, iconX, iconY, iconSize, iconSize);
+            } catch (err) {
+                // fallback to square with initials if drawImage fails
+                ctx.fillStyle = '#cccccc';
+                ctx.fillRect(iconX, iconY, iconSize, iconSize);
+                ctx.fillStyle = '#fff';
+                ctx.font = 'bold 14px sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillText(charInitials(e.character || e.name), iconX + iconSize / 2, iconY + iconSize / 2);
+            }
+        } else {
+            // fallback: simple colored square with initials (no character text)
+            const seed = (e.character || e.name || '').split('').reduce((acc, ch) => acc + ch.charCodeAt(0), 0);
+            const hue = seed % 360;
+            ctx.fillStyle = `hsl(${hue} 60% 45%)`;
+            ctx.fillRect(iconX, iconY, iconSize, iconSize);
+            ctx.fillStyle = '#fff';
+            ctx.font = 'bold 14px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText(charInitials(e.character || e.name), iconX + iconSize / 2, iconY + iconSize / 2);
+        }
     });
+
+    // draw border if requested (stroke centered on the canvas edge)
+    if (addBorder && borderSize > 0) {
+        ctx.strokeStyle = '#000000';
+        ctx.lineWidth = borderSize;
+        // draw rectangle so the stroke sits inside the canvas
+        ctx.strokeRect(borderSize / 2, borderSize / 2, neededWidth - borderSize, height - borderSize);
+    }
 
     graphicArea.appendChild(canvas);
 
