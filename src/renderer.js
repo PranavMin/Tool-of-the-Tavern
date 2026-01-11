@@ -1,4 +1,5 @@
 import "./index.css";
+import "./app.css";
 import { extractSlug, cleanName } from "./util.js";
 import { getTop8 } from "./api.js";
 import { loadCharacterIcon } from "./icon.js";
@@ -15,15 +16,16 @@ const MELEE_CHARACTERS = [
   "Peach",
   "Jigglypuff",
   "Captain Falcon",
+  "Donkey Kong",
   "Ice Climbers",
+  "Luigi",
+  "Yoshi",
+  "Mario",
   "Samus",
   "Ganondorf",
   "Young Link",
   "Link",
-  "Luigi",
-  "Mario",
   "Bowser",
-  "Yoshi",
   "Pikachu",
   "Roy",
   "Mr. Game & Watch",
@@ -31,48 +33,32 @@ const MELEE_CHARACTERS = [
   "Mewtwo",
   "Pichu",
   "Dr. Mario",
-  "Donkey Kong",
   "Kirby",
   "Zelda",
 ];
 
-// input for user to paste start.gg link
+// INPUT - Start GG event URL
 const input = document.createElement("input");
 input.id = "startgg-input";
 input.placeholder = "Paste start.gg event URL or tournament/.../event/...";
-input.style.width = "100%";
-input.style.maxWidth = "700px"; // 40% larger than previous 720px
-input.style.marginBottom = "8px";
 input.value = STARTGG_URL; // prefill with example
 document.body.appendChild(input);
 
-// fetch button (placed directly under input, above player list)
+// BUTTON - Fetch Top 8
 const btn = document.createElement("button");
 btn.id = "fetch-top8-btn";
 btn.textContent = "Fetch Top 8";
-btn.style.display = "block";
-btn.style.marginTop = "8px auto";
-btn.style.margin = "0 auto 8px auto";
-btn.style.width = "100%";
-btn.style.maxWidth = "600px"; // match input width (40% larger)
 document.body.appendChild(btn);
 
-// warning / status area (reused for results)
+// WARN / STATUS AREA and RESULTS CONTAINER
 const container = document.createElement("div");
 container.id = "top8-container";
-container.style.whiteSpace = "pre-wrap"; // keep newlines
-container.style.marginTop = "8px auto";
 document.body.appendChild(container);
 
-// new button to generate graphic from the editable form
+// BUTTON - Generate Graphic
 const genBtn = document.createElement("button");
 genBtn.id = "generate-graphic-btn";
 genBtn.textContent = "Generate Graphic";
-genBtn.style.display = "block";
-// center the button, limit max width so margin auto centers it
-genBtn.style.maxWidth = "600px";
-genBtn.style.width = "100%";
-genBtn.style.margin = "8px auto";
 genBtn.disabled = true; // enabled after successful fetch/render
 document.body.appendChild(genBtn);
 
@@ -80,24 +66,15 @@ document.body.appendChild(genBtn);
 const graphicArea = document.createElement("div");
 graphicArea.id = "graphic-area";
 // center canvas and buttons inside this area
-graphicArea.style.display = "flex";
-graphicArea.style.flexDirection = "column";
-graphicArea.style.alignItems = "center";
-graphicArea.style.marginTop = "12px";
 document.body.appendChild(graphicArea);
 
 // add a checkbox to toggle a border around the generated image
 const borderLabel = document.createElement("label");
-borderLabel.style.display = "inline-block";
-borderLabel.style.marginTop = "8px";
-borderLabel.style.marginBottom = "8px";
-borderLabel.style.maxWidth = "1008px";
-borderLabel.style.width = "100%";
+borderLabel.className = "border-label";
 
 const borderChk = document.createElement("input");
 borderChk.type = "checkbox";
 borderChk.id = "add-border-chk";
-borderChk.style.marginRight = "8px";
 
 borderLabel.appendChild(borderChk);
 borderLabel.appendChild(document.createTextNode("Add border"));
@@ -110,10 +87,6 @@ document.body.insertBefore(borderLabel, graphicArea);
 const testBtn = document.createElement("button");
 testBtn.id = "test-graphic-btn";
 testBtn.textContent = "Test Graphic (Dummy Data)";
-testBtn.style.display = "block";
-testBtn.style.marginTop = "8px";
-testBtn.style.width = "100%";
-testBtn.style.maxWidth = "1008px";
 document.body.appendChild(testBtn);
 
 async function handleGraphicGeneration(entries) {
@@ -128,13 +101,7 @@ async function handleGraphicGeneration(entries) {
     // download button
     const dl = document.createElement("a");
     dl.textContent = "Download PNG";
-    dl.style.display = "inline-block";
-    dl.style.marginTop = "8px";
-    dl.style.padding = "8px 12px";
-    dl.style.background = "#2563eb";
-    dl.style.color = "#fff";
-    dl.style.borderRadius = "4px";
-    dl.style.textDecoration = "none";
+    dl.className = "download-btn";
     dl.href = canvas.toDataURL("image/png");
     dl.download = "top8.png";
     graphicArea.appendChild(dl);
@@ -191,23 +158,13 @@ btn.addEventListener("click", async () => {
 
         const row = document.createElement("div");
         row.className = "top8-row";
-        row.style.display = "flex";
-        row.style.alignItems = "center";
-        row.style.gap = "8px";
-        row.style.marginBottom = "0px";
-        row.style.marginTop = "4px";
 
         const placelabel = document.createElement("div");
         placelabel.textContent = `${placement}.`;
-        placelabel.style.width = "auto";
-        placelabel.style.height = "auto";
-        // placelabel.style.flex = '0 0 auto';
 
         const nameInput = document.createElement("input");
         nameInput.type = "text";
         nameInput.value = cleanName(rawName);
-        nameInput.style.flex = "1";
-        nameInput.style.minWidth = "10px";
 
         const charSelect = document.createElement("select");
         const defaultOption = document.createElement("option");
@@ -231,8 +188,6 @@ btn.addEventListener("click", async () => {
         } catch (e) {
           // ignore cache lookup errors
         }
-
-        charSelect.style.flex = "1";
 
         row.appendChild(placelabel);
         row.appendChild(nameInput);
@@ -266,9 +221,6 @@ genBtn.addEventListener("click", async () => {
   if (!errorDiv) {
     errorDiv = document.createElement("div");
     errorDiv.id = "top8-error";
-    errorDiv.style.color = "#b91c1c"; // red-700
-    errorDiv.style.margin = "8px 0";
-    errorDiv.style.fontWeight = "600";
     // insert above the container so we don't remove the rows when showing messages
     container.parentNode.insertBefore(errorDiv, container);
   }
@@ -280,13 +232,10 @@ genBtn.addEventListener("click", async () => {
     const sel = r.querySelector("select");
     const inp = r.querySelector("input");
     if (sel) {
-      sel.style.border = "";
-      sel.style.boxShadow = "";
-      sel.style.background = "";
+      sel.classList.remove("input-error");
     }
     if (inp) {
-      inp.style.border = "";
-      inp.style.boxShadow = "";
+      inp.classList.remove("input-error-subtle");
     }
     r.classList.remove("missing-character");
   });
@@ -302,14 +251,12 @@ genBtn.addEventListener("click", async () => {
     const inp = missingRow.querySelector("input");
     if (sel) {
       // visually indicate the missing selection and focus it
-      sel.style.border = "2px solid #e11";
-      sel.style.boxShadow = "0 0 0 3px rgba(225,29,72,0.12)";
+      sel.classList.add("input-error");
       sel.focus();
     }
     if (inp) {
       // also subtly highlight the name input so the whole row is obvious
-      inp.style.border = "2px solid #e11";
-      inp.style.boxShadow = "0 0 0 3px rgba(225,29,72,0.06)";
+      inp.classList.add("input-error-subtle");
     }
 
     missingRow.classList.add("missing-character");
