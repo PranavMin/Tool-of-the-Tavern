@@ -116,13 +116,19 @@ async function handleGraphicGeneration(entries) {
     graphicArea.innerHTML = "";
     graphicArea.appendChild(canvas);
 
-    // download button
-    const dl = document.createElement("a");
-    dl.textContent = "Download PNG";
-    dl.className = "download-btn";
-    dl.href = canvas.toDataURL("image/png");
-    dl.download = "top8.png";
-    graphicArea.appendChild(dl);
+    // copy to clipboard button
+    const copyBtn = document.createElement("button");
+    copyBtn.textContent = "Copy to Clipboard";
+    copyBtn.className = "copy-btn";
+    copyBtn.onclick = () => {
+      canvas.toBlob((blob) => {
+        navigator.clipboard.write([new ClipboardItem({ "image/png": blob })]).then(() => {
+          copyBtn.textContent = "Copied!";
+          setTimeout(() => (copyBtn.textContent = "Copy to Clipboard"), 2000);
+        });
+      });
+    };
+    graphicArea.appendChild(copyBtn);
 
     // persist mapping of cleaned player name -> character for future autocomplete
     let map = {};
