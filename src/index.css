@@ -33,16 +33,17 @@ p {
 }
 
 #top8-container {
-  white-space: pre-wrap;
-  margin: 8px auto;
+  display: flex;
+  flex-direction: column;
+  margin: 0px auto;
 }
 
 .top8-row {
   display: flex;
   align-items: center;
   gap: 8px;
-  margin-top: 4px;
-  margin-bottom: 8px;
+  margin-top: 0px;
+  margin-bottom: 0px;
 }
 
 .top8-row input[type="text"],
@@ -51,7 +52,7 @@ p {
   min-width: 10px;
   padding: 6px;
   box-sizing: border-box;
-  height: 40px;
+  height: 45px;
   border: 1px solid #ccc;
   border-radius: 4px;
 }
