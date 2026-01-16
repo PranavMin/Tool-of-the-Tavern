@@ -6,7 +6,7 @@ import { generateGraphic } from "./generategraphic.js";
 
 // removed automatic fetch-on-load and add UI to fetch/render on button click
 const STARTGG_URL = "";
-const SHOW_TEST_BUTTON = true;
+const SHOW_TEST_BUTTON = false;
 
 const MELEE_CHARACTERS = [
   "Fox",
@@ -125,7 +125,13 @@ async function handleGraphicGeneration(entries) {
     graphicArea.appendChild(dl);
 
     // persist mapping of cleaned player name -> character for future autocomplete
-    const map = {};
+    let map = {};
+    try {
+      map = JSON.parse(localStorage.getItem("character-cache") || "{}");
+    } catch (e) {
+      console.warn("Could not read existing cache, starting fresh.", e);
+    }
+
     entries.forEach((e) => {
       if (e.name && e.character) {
         map[cleanName(e.name)] = e.character;
@@ -163,7 +169,12 @@ btn.addEventListener("click", async () => {
       container.innerHTML = "";
 
       // load persisted cache (player name -> character)
-      const cache = JSON.parse(localStorage.getItem("character-cache") || "{}");
+      let cache = {};
+      try {
+        cache = JSON.parse(localStorage.getItem("character-cache") || "{}");
+      } catch (e) {
+        console.warn("Invalid character cache, ignoring.", e);
+      }
 
       const sorted = nodes
         .slice()
