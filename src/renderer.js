@@ -1,5 +1,4 @@
 import "./index.css";
-import "./app.css";
 import { extractSlug, cleanName } from "./util.js";
 import { getTop8 } from "./api.js";
 import { loadCharacterIcon } from "./icon.js";
