@@ -112,7 +112,7 @@ async function handleGraphicGeneration(entries) {
         map[cleanName(e.name)] = e.character;
       }
     });
-    await window.electronAPI.writeCache(map).catch(() => null);
+    localStorage.setItem("character-cache", JSON.stringify(map));
   } catch (err) {
     console.error(err);
     graphicArea.innerText = "Error generating graphic: " + err.message;
@@ -144,7 +144,7 @@ btn.addEventListener("click", async () => {
       container.innerHTML = "";
 
       // load persisted cache (player name -> character)
-      const cache = await window.electronAPI.readCache().catch(() => ({}));
+      const cache = JSON.parse(localStorage.getItem("character-cache") || "{}");
 
       const sorted = nodes
         .slice()

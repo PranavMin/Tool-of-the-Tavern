@@ -29,7 +29,7 @@
     "files": [
       "package.json",
       ".vite/**/*",
-      ".env"
+      "../.env"
     ]
   },
   "devDependencies": {
