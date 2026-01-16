@@ -38,24 +38,24 @@ const MELEE_CHARACTERS = [
 ];
 
 // FIELDSET
-const fieldset = document.createElement("fieldset");
-fieldset.role = "group";
-fieldset.id = "top8-fieldset";
-fieldset.className = "top8-fieldset";
-document.body.appendChild(fieldset);
+const fetTop8Fieldset = document.createElement("fieldset");
+fetTop8Fieldset.role = "group";
+fetTop8Fieldset.id = "top8-fieldset";
+fetTop8Fieldset.className = "top8-fieldset";
+document.body.appendChild(fetTop8Fieldset);
 
 // INPUT - Start GG event URL
-const input = document.createElement("input");
-input.id = "startgg-input";
-input.placeholder = "Paste start.gg event URL or tournament/.../event/...";
-input.value = STARTGG_URL; // prefill with example
-fieldset.appendChild(input);
+const startggInput = document.createElement("input");
+startggInput.id = "startgg-input";
+startggInput.placeholder = "Paste start.gg event URL or tournament/.../event/...";
+startggInput.value = STARTGG_URL; // prefill with example
+fetTop8Fieldset.appendChild(startggInput);
 
 // BUTTON - Fetch Top 8
-const btn = document.createElement("button");
-btn.id = "fetch-top8-btn";
-btn.textContent = "Fetch";
-fieldset.appendChild(btn);
+const fetchTop8Btn = document.createElement("button");
+fetchTop8Btn.id = "fetch-top8-btn";
+fetchTop8Btn.textContent = "Fetch";
+fetTop8Fieldset.appendChild(fetchTop8Btn);
 
 // WARN / STATUS AREA and RESULTS CONTAINER
 const container = document.createElement("div");
@@ -63,17 +63,17 @@ container.id = "top8-container";
 document.body.appendChild(container);
 
 // BUTTON - Generate Graphic
-const genBtn = document.createElement("button");
-genBtn.id = "generate-graphic-btn";
-genBtn.textContent = "Generate Graphic";
-genBtn.style.display = "none"; // hidden until successful fetch/render
-document.body.appendChild(genBtn);
+const generateGraphicBtn = document.createElement("button");
+generateGraphicBtn.id = "generate-graphic-btn";
+generateGraphicBtn.textContent = "Generate Graphic";
+generateGraphicBtn.style.display = "none"; // hidden until successful fetch/render
+document.body.appendChild(generateGraphicBtn);
 
 // area where generated canvas / download link will be placed
-const graphicArea = document.createElement("div");
-graphicArea.id = "graphic-area";
+const top8GraphicArea = document.createElement("div");
+top8GraphicArea.id = "graphic-area";
 // center canvas and buttons inside this area
-document.body.appendChild(graphicArea);
+document.body.appendChild(top8GraphicArea);
 
 // ============================================
 // HSL IMAGE FILTER SECTION
@@ -156,12 +156,12 @@ if (SHOW_TEST_BUTTON) {
 
 async function handleGraphicGeneration(entries) {
   const addBorder = !!document.getElementById("add-border-chk")?.checked;
-  graphicArea.innerHTML = "Generating...";
+  top8GraphicArea.innerHTML = "Generating...";
 
   try {
     const canvas = await generateGraphic(entries, { addBorder });
-    graphicArea.innerHTML = "";
-    graphicArea.appendChild(canvas);
+    top8GraphicArea.innerHTML = "";
+    top8GraphicArea.appendChild(canvas);
 
     // copy to clipboard button
     const copyBtn = document.createElement("button");
@@ -177,7 +177,7 @@ async function handleGraphicGeneration(entries) {
           });
       });
     };
-    graphicArea.appendChild(copyBtn);
+    top8GraphicArea.appendChild(copyBtn);
 
     // persist mapping of cleaned player name -> character for future autocomplete
     let map = {};
@@ -195,39 +195,39 @@ async function handleGraphicGeneration(entries) {
     localStorage.setItem("character-cache", JSON.stringify(map));
   } catch (err) {
     console.error(err);
-    graphicArea.innerText = "Error generating graphic: " + err.message;
+    top8GraphicArea.innerText = "Error generating graphic: " + err.message;
   }
 }
 
-btn.addEventListener("click", async () => {
-  btn.disabled = true;
+fetchTop8Btn.addEventListener("click", async () => {
+  fetchTop8Btn.disabled = true;
 
-  btn.ariaBusy = "true";
-  btn.textContent = "Fetching...";
-  genBtn.style.display = "none";
-  graphicArea.innerHTML = "";
+  fetchTop8Btn.ariaBusy = "true";
+  fetchTop8Btn.textContent = "Fetching...";
+  generateGraphicBtn.style.display = "none";
+  top8GraphicArea.innerHTML = "";
 
   // validate input contains "event"
-  const raw = (input.value || "").trim();
+  const raw = (startggInput.value || "").trim();
   const url = raw || STARTGG_URL;
   if (!url.toLowerCase().includes("event") || !url.toLowerCase().includes("tournament")) {
     container.innerText =
       'Invalid link: please provide a start.gg URL or slug that contains "tournament/.../event/".';
-    btn.disabled = false;
-    input.ariaInvalid = "true"; // Indicate invalid input
-    btn.ariaBusy = "false";
-    btn.textContent = "Fetch";
+    fetchTop8Btn.disabled = false;
+    startggInput.ariaInvalid = "true"; // Indicate invalid input
+    fetchTop8Btn.ariaBusy = "false";
+    fetchTop8Btn.textContent = "Fetch";
     return;
   }
 
-  input.ariaInvalid = "false"; // Reset to valid if validation passes
+  startggInput.ariaInvalid = "false"; // Reset to valid if validation passes
 
   try {
     const nodes = await getTop8(url);
 
     if (nodes && nodes.length) {
       // render editable inputs + character dropdown for each player
-          btn.textContent = "Fetched!";
+          fetchTop8Btn.textContent = "Fetched!";
       container.innerHTML = "";
 
       // load persisted cache (player name -> character)
@@ -287,30 +287,30 @@ btn.addEventListener("click", async () => {
         container.appendChild(row);
       });
       // enable generate button when rows are present
-      genBtn.style.display = "block";
+      generateGraphicBtn.style.display = "block";
     } else {
       container.innerText = "No standings returned.";
-      btn.ariaBusy = "false";
-      input.ariaInvalid = "true";
-      btn.textContent = "Fetch";
+      fetchTop8Btn.ariaBusy = "false";
+      startggInput.ariaInvalid = "true";
+      fetchTop8Btn.textContent = "Fetch";
     }
   } catch (err) {
     console.error(err);
     container.innerText = "Error fetching top 8.";
-    btn.ariaBusy = "false";
-    btn.textContent = "Fetch";
+    fetchTop8Btn.ariaBusy = "false";
+    fetchTop8Btn.textContent = "Fetch";
   } finally {
-    btn.disabled = false;
-    btn.ariaBusy = "false";
+    fetchTop8Btn.disabled = false;
+    fetchTop8Btn.ariaBusy = "false";
 
   }
 });
 
 // update existing generate button to use the refactored function
-genBtn.addEventListener("click", async () => {
+generateGraphicBtn.addEventListener("click", async () => {
   const rows = Array.from(container.querySelectorAll(".top8-row"));
   if (!rows.length) {
-    graphicArea.innerText = "No rows to generate from.";
+    top8GraphicArea.innerText = "No rows to generate from.";
     return;
   }
 
