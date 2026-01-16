@@ -4,7 +4,6 @@ import { getTop8 } from "./api.js";
 import { loadCharacterIcon } from "./icon.js";
 import { generateGraphic } from "./generategraphic.js";
 
-// removed automatic fetch-on-load and add UI to fetch/render on button click
 const STARTGG_URL = "";
 const SHOW_TEST_BUTTON = false;
 
@@ -114,10 +113,12 @@ async function handleGraphicGeneration(entries) {
     copyBtn.className = "copy-btn";
     copyBtn.onclick = () => {
       canvas.toBlob((blob) => {
-        navigator.clipboard.write([new ClipboardItem({ "image/png": blob })]).then(() => {
-          copyBtn.textContent = "Copied!";
-          setTimeout(() => (copyBtn.textContent = "Copy to Clipboard"), 2000);
-        });
+        navigator.clipboard
+          .write([new ClipboardItem({ "image/png": blob })])
+          .then(() => {
+            copyBtn.textContent = "Copied!";
+            setTimeout(() => (copyBtn.textContent = "Copy to Clipboard"), 2000);
+          });
       });
     };
     graphicArea.appendChild(copyBtn);
@@ -144,26 +145,33 @@ async function handleGraphicGeneration(entries) {
 
 btn.addEventListener("click", async () => {
   btn.disabled = true;
-  container.textContent = "Loading...";
+
+  btn.ariaBusy = "true";
+  btn.textContent = "Fetching...";
   genBtn.style.display = "none";
   graphicArea.innerHTML = "";
 
   // validate input contains "event"
   const raw = (input.value || "").trim();
   const url = raw || STARTGG_URL;
-  if (!url.toLowerCase().includes("event")) {
+  if (!url.toLowerCase().includes("event") || !url.toLowerCase().includes("tournament")) {
     container.innerText =
-      'Invalid link: please provide a start.gg URL or slug that contains "event".';
+      'Invalid link: please provide a start.gg URL or slug that contains "tournament/.../event/".';
     btn.disabled = false;
+    input.ariaInvalid = "true"; // Indicate invalid input
+    btn.ariaBusy = "false";
+    btn.textContent = "Fetch";
     return;
   }
+
+  input.ariaInvalid = "false"; // Reset to valid if validation passes
 
   try {
     const nodes = await getTop8(url);
 
     if (nodes && nodes.length) {
       // render editable inputs + character dropdown for each player
-
+          btn.textContent = "Fetched!";
       container.innerHTML = "";
 
       // load persisted cache (player name -> character)
@@ -226,12 +234,19 @@ btn.addEventListener("click", async () => {
       genBtn.style.display = "block";
     } else {
       container.innerText = "No standings returned.";
+      btn.ariaBusy = "false";
+      input.ariaInvalid = "true";
+      btn.textContent = "Fetch";
     }
   } catch (err) {
     console.error(err);
     container.innerText = "Error fetching top 8.";
+    btn.ariaBusy = "false";
+    btn.textContent = "Fetch";
   } finally {
     btn.disabled = false;
+    btn.ariaBusy = "false";
+
   }
 });
 
