@@ -12,6 +12,11 @@ p {
   text-align: center;
 }
 
+#links {
+  text-align: center;
+  margin-bottom: 16px;
+}
+
 #startgg-input {
   display: block;
   width: 100%;
