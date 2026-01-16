@@ -3,12 +3,8 @@ import { loadCharacterIcon } from "./icon.js";
 // Generate graphic from the editable rows
 // refactor: single function that draws given entries (preloads icons)
 export async function generateGraphic(
-  entries,
-  { addBorder = false } = {}
+  entries
 ) {
-  // use addBorder instead of querying the DOM in this module
-  const borderSize = addBorder ? 1 : 0;
-
   // ensure entries is an array
   if (!Array.isArray(entries) || !entries.length) {
     throw new Error("No entries to generate from.");
@@ -55,12 +51,12 @@ export async function generateGraphic(
   const innerWidth = Math.ceil(
     Math.max(neededWidthForRows, leftPadding + headerWidth + rightPadding, 200)
   ); // min width 200
-  const neededWidth = innerWidth + borderSize * 2;
+  const neededWidth = innerWidth;
 
   // compute inner content height and final height including border
   const innerHeight =
     headerHeight + headerBottomPadding + entries.length * rowH;
-  const height = innerHeight + borderSize * 2;
+  const height = innerHeight;
 
   // device pixel ratio handling
   const dpr = window.devicePixelRatio || 1;
@@ -81,32 +77,32 @@ export async function generateGraphic(
   ctx.font = headerFont;
   ctx.textAlign = "left";
   ctx.textBaseline = "middle";
-  const headerY = borderSize + headerHeight / 2;
+  const headerY = headerHeight / 2;
   ctx.fillText(
     headerText,
-    borderSize + (innerWidth - headerWidth) / 2,
+    (innerWidth - headerWidth) / 2,
     headerY
   );
 
-  // draw rows (offset by borderSize)
+  // draw rows
   ctx.font = textFont;
   ctx.textBaseline = "middle";
   entries.forEach((e, i) => {
-    const y = borderSize + headerHeight + headerBottomPadding + i * rowH;
+    const y = headerHeight + headerBottomPadding + i * rowH;
     const label = `${e.place}. ${e.name}`;
 
     // text
     ctx.fillStyle = "#523d30";
     ctx.textAlign = "left";
-    ctx.fillText(label, borderSize + leftPadding, y + rowH / 2);
+    ctx.fillText(label, leftPadding, y + rowH / 2);
 
     // measure to place icon immediately after text
     const textWidth = ctx.measureText(label).width;
     let iconX = Math.round(
-      borderSize + leftPadding + textWidth + iconLeftPadding
+      leftPadding + textWidth + iconLeftPadding
     );
     // ensure icon doesn't overflow inner content area
-    const innerRight = borderSize + innerWidth - rightPadding;
+    const innerRight = innerWidth - rightPadding;
     if (iconX + iconSize > innerRight) {
       iconX = innerRight - iconSize;
     }
@@ -114,19 +110,6 @@ export async function generateGraphic(
 
     ctx.drawImage(e.icon, iconX, iconY, iconSize, iconSize);
   });
-
-  // draw border if requested (stroke centered on the canvas edge)
-  if (addBorder && borderSize > 0) {
-    ctx.strokeStyle = "#000000";
-    ctx.lineWidth = borderSize;
-    // draw rectangle so the stroke sits inside the canvas
-    ctx.strokeRect(
-      borderSize / 2,
-      borderSize / 2,
-      neededWidth - borderSize,
-      height - borderSize
-    );
-  }
 
   return canvas;
 }
